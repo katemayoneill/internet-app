@@ -1,0 +1,34 @@
+# dependencies
+node_modules/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# runtime
+.env
+.DS_Store
+Thumbs.db
+
+# build / cache
+dist/
+.vite/
+.cache/
+*.tmp
+*.temp
+
+# IDE
+.vscode
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+*.pid
+*.seed
+*.pid.lock
+
+# optional: ignore generated PDF and video (you re-create them every build)
+report.pdf
+demo.mp4

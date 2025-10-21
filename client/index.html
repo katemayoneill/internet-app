@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Weather Packer</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+<base target="_blank">
+</head>
+<body class="bg-gray-100">
+  <div id="app" class="max-w-4xl mx-auto p-6">
+    <h1 class="text-2xl font-bold mb-4">Weather Packer</h1>
+    <input v-model="city" @keyup.enter="load" class="border px-3 py-1" placeholder="City">
+    <button @click="load" class="ml-2 bg-blue-600 text-white px-3 py-1 rounded">Go</button>
+
+    <div v-if="error" class="text-red-600 mt-4">{{ error }}</div>
+
+    <div v-if="result">
+      <div class="mt-4 p-4 bg-white rounded shadow">
+        <p v-if="bringUmbrella" class="text-red-700 font-semibold">☔ Bring an umbrella!</p>
+        <p>Pack for <span class="font-bold">{{ packLevel }}</span> weather.</p>
+      </div>
+
+      <table class="mt-4 w-full text-left">
+        <thead>
+          <tr class="border-b"><th>Day</th><th>Temp °C</th><th>Wind km/h</th><th>Rain mm</th></tr>
+        </thead>
+        <tbody>
+          <tr v-for="d in days" :key="d.dt">
+            <td>{{ new Date(d.dt*1000).toLocaleDateString() }}</td>
+            <td>{{ d.main.temp }}</td>
+            <td>{{ (d.wind.speed * 3.6).toFixed(1) }}</td>
+            <td>{{ d.rain?.['3h'] || 0 }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div v-if="airWarning" class="mt-4 p-3 bg-orange-200 text-orange-900 rounded">
+        ⚠️ Air quality: {{ airWarning }}
+      </div>
+    </div>
+  </div>
+
+  <script>
+    Vue.createApp({
+      data: () => ({ city: 'Dublin', result: null, error: null }),
+      computed: {
+        days() { return this.result.list; },
+        bringUmbrella() { return this.days.some(d => (d.rain?.['3h'] || 0) > 0); },
+        packLevel() {
+          const maxT = Math.max(...this.days.map(d => d.main.temp));
+          return maxT > 24 ? 'Hot' : maxT < 8 ? 'Cold' : 'Mild';
+        },
+        airWarning() {
+          const a = this.result.air;
+          const comps = a.components;
+          if (comps.pm2_5 > 10) return `PM2.5 elevated (${comps.pm2_5} µg/m³) – sensitive groups reduce outdoor activity.`;
+          if (comps.no2 > 40) return `NO₂ elevated (${comps.no2} µg/m³) – may irritate airways.`;
+          return '';
+        }
+      },
+      methods: {
+        async load() {
+          try {
+            const r = await fetch(`http://localhost:4000/api/weather?city=${this.city}`);
+            this.result = await r.json();
+            this.error = null;
+          } catch (e) { this.error = e.message; }
+        }
+      },
+      mounted() { this.load(); }
+    }).mount('#app');
+  </script>
+</body>
+</html>
