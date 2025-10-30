@@ -1,289 +1,31 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Weather Packer - Smart Travel Planner</title>
+  <title>Weather Packer – Smart Travel Planner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Vue 3 (CDN) -->
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <base target="_blank">
-  <style>
-    .fade-enter-active, .fade-leave-active { transition: opacity 0.5s; }
-    .fade-enter-from, .fade-leave-to { opacity: 0; }
-    .slot-card { transition: transform 0.2s; }
-    .slot-card:hover { transform: translateY(-2px); }
-  </style>
+  <!-- Classic CSS -->
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen">
-  <div id="app" class="max-w-7xl mx-auto p-6">
-    <!-- Header -->
-    <div class="bg-white rounded-xl shadow-xl p-8 mb-6">
-      <h1 class="text-4xl font-bold mb-2 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-        🌤️ Weather Packer
-      </h1>
-      <p class="text-gray-600 mb-6">Your Smart Travel Planning Companion</p>
+<body>
+  <div id="app">
+    <h1>🌤️ Weather Packer</h1>
 
-      <div class="flex gap-4">
-        <input
-          v-model="city"
-          @keyup.enter="loadWeather"
-          class="flex-1 border-2 border-indigo-200 rounded-lg px-4 py-3 focus:outline-none focus:border-indigo-500 transition"
-          placeholder="Enter destination city (e.g., Paris, Tokyo, New York)...">
-        <button
-          @click="loadWeather"
-          :disabled="loading"
-          class="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white px-8 py-3 rounded-lg font-semibold transition shadow-md">
-          {{ loading ? 'Analyzing...' : 'Plan My Trip' }}
-        </button>
-      </div>
+    <!-- Search -->
+    <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
+      <input v-model="city" @keyup.enter="loadWeather" placeholder="Enter city (e.g., Dublin, Paris, Tokyo)" style="flex:1;" />
+      <button @click="loadWeather" :disabled="loading">{{ loading ? 'Loading…' : 'Get Forecast' }}</button>
     </div>
 
-    <!-- Error Display -->
-    <div v-if="error" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-6">
-      <p class="font-bold">❌ Error</p>
-      <p>{{ error }}</p>
+    <!-- Errors -->
+    <div v-if="error" style="background:#fde7e7; color:#a40000; padding:10px; border-radius:8px; margin-bottom:12px;">
+      ❌ {{ error }}
     </div>
 
-    <!-- Main Content -->
-    <transition name="fade">
-      <div v-if="result">
-        <!-- Summary Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div class="bg-white rounded-xl shadow-lg p-6 border-t-4 border-blue-500">
-            <div class="flex items-center mb-3">
-              <span class="text-4xl mr-3">☔</span>
-              <div>
-                <h3 class="font-bold text-lg text-gray-800">Rain Check</h3>
-                <p v-if="bringUmbrella" class="text-red-600 font-semibold">Bring umbrella!</p>
-                <p v-else class="text-green-600 font-semibold">No rain expected</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-white rounded-xl shadow-lg p-6 border-t-4 border-orange-500">
-            <div class="flex items-center mb-3">
-              <span class="text-4xl mr-3">🌡️</span>
-              <div>
-                <h3 class="font-bold text-lg text-gray-800">Pack For</h3>
-                <p class="text-2xl font-bold" :class="packLevelColor">{{ packLevel }}</p>
-                <p class="text-sm text-gray-600">{{ tempRange }}°C</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-white rounded-xl shadow-lg p-6 border-t-4 border-green-500">
-            <div class="flex items-center mb-3">
-              <span class="text-4xl mr-3">💨</span>
-              <div>
-                <h3 class="font-bold text-lg text-gray-800">Air Quality</h3>
-                <p v-if="airWarning" class="text-orange-600 font-semibold">⚠️ Caution</p>
-                <p v-else class="text-green-600 font-semibold">Good ✓</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Weather Forecast Table -->
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-          <h2 class="text-2xl font-bold mb-4 text-gray-800">📅 3-Day Weather Forecast</h2>
-          <div class="overflow-x-auto">
-            <table class="w-full">
-              <thead>
-                <tr class="border-b-2 border-gray-200 text-left">
-                  <th class="py-3 px-4 font-semibold text-gray-700">Day</th>
-                  <th class="py-3 px-4 font-semibold text-gray-700">Temperature</th>
-                  <th class="py-3 px-4 font-semibold text-gray-700">Wind Speed</th>
-                  <th class="py-3 px-4 font-semibold text-gray-700">Rainfall</th>
-                  <th class="py-3 px-4 font-semibold text-gray-700">Conditions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="d in days" :key="d.dt" class="border-b hover:bg-gray-50 transition">
-                  <td class="py-3 px-4 font-medium">{{ formatDate(d.dt) }}</td>
-                  <td class="py-3 px-4">
-                    <span class="font-semibold">{{ d.main.temp }}°C</span>
-                  </td>
-                  <td class="py-3 px-4">{{ (d.wind.speed * 3.6).toFixed(1) }} km/h</td>
-                  <td class="py-3 px-4">{{ d.rain?.['3h'] || 0 }} mm</td>
-                  <td class="py-3 px-4 capitalize">{{ d.weather[0].description }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Air Quality Warning -->
-        <div v-if="airWarning" class="bg-orange-50 border-l-4 border-orange-500 p-5 rounded-lg mb-6">
-          <div class="flex items-start">
-            <span class="text-2xl mr-3">⚠️</span>
-            <div>
-              <p class="font-bold text-orange-900 mb-1">Air Quality Alert</p>
-              <p class="text-orange-800">{{ airWarning }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- INNOVATIVE FEATURE: Smart Itinerary Generator -->
-        <div class="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl shadow-xl p-8 mb-6 text-white">
-          <h2 class="text-3xl font-bold mb-3">✨ Smart Itinerary Generator</h2>
-          <p class="mb-4 opacity-90">Get a personalized day-by-day plan with real venues based on weather conditions</p>
-          <button
-            @click="generateItinerary"
-            :disabled="generatingItinerary"
-            class="bg-white text-indigo-600 hover:bg-gray-100 disabled:bg-gray-300 disabled:text-gray-500 px-6 py-3 rounded-lg font-semibold transition shadow-lg">
-            {{ generatingItinerary ? '🔄 Generating Your Perfect Trip...' : '🗓️ Generate My Itinerary' }}
-          </button>
-        </div>
-
-        <!-- Itinerary Display -->
-        <div v-if="itinerary.length > 0" class="space-y-6">
-          <div v-for="day in itinerary" :key="day.day" class="bg-white rounded-xl shadow-lg overflow-hidden">
-            <!-- Day Header -->
-            <div class="bg-gradient-to-r from-indigo-500 to-purple-500 p-6 text-white">
-              <div class="flex justify-between items-center">
-                <div>
-                  <h3 class="text-2xl font-bold">Day {{ day.day }}: {{ day.date }}</h3>
-                  <p class="opacity-90 mt-1">{{ day.weather.temp }}°C • {{ day.weather.condition }}</p>
-                </div>
-                <div class="text-right text-sm opacity-90">
-                  <p>💨 Wind: {{ day.weather.wind }} km/h</p>
-                  <p v-if="day.weather.rain > 0">🌧️ Rain: {{ day.weather.rain }} mm</p>
-                </div>
-            </div>
-
-            <!-- Time Slots -->
-            <div class="p-6 space-y-4">
-              <div
-                v-for="(slot, idx) in day.timeSlots"
-                :key="idx"
-                class="slot-card border-l-4 border-indigo-500 bg-gray-50 p-5 rounded-lg">
-                <div class="flex justify-between items-start mb-3">
-                  <div>
-                    <p class="text-sm font-semibold text-indigo-600 mb-1">{{ slot.time }}</p>
-                    <h4 class="text-xl font-bold text-gray-800">{{ slot.activity }}</h4>
-                  </div>
-                  <span v-if="slot.venue.rating !== 'N/A'"
-                    class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-semibold">
-                    ⭐ {{ slot.venue.rating }}
-                  </span>
-                </div>
-
-                <div class="bg-white p-4 rounded-lg mb-3">
-                  <p class="font-bold text-gray-800 text-lg mb-2">📍 {{ slot.venue.name }}</p>
-                  <p class="text-gray-600 text-sm mb-1">{{ slot.venue.address }}</p>
-                  <p class="text-gray-500 text-sm capitalize">Type: {{ slot.venue.type }}</p>
-                  <p v-if="slot.venue.openNow !== null" class="text-sm mt-2">
-                    <span :class="slot.venue.openNow ? 'text-green-600' : 'text-red-600'" class="font-semibold">
-                      {{ slot.venue.openNow ? '✓ Open Now' : '✗ Closed' }}
-                    </span>
-                  </p>
-                </div>
-
-                <div class="flex items-start text-sm text-gray-600">
-                  <span class="mr-2">💡</span>
-                  <p class="italic">{{ slot.reason }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </transition>
-  </div>
-
-  <script>
-    Vue.createApp({
-      data: () => ({
-        city: 'Dublin',
-        result: null,
-        error: null,
-        loading: false,
-        itinerary: [],
-        generatingItinerary: false
-      }),
-      computed: {
-        days() { return this.result.list; },
-        bringUmbrella() {
-          return this.days.some(d => (d.rain?.['3h'] || 0) > 0);
-        },
-        packLevel() {
-          const maxT = Math.max(...this.days.map(d => d.main.temp));
-          return maxT > 24 ? 'Hot' : maxT < 8 ? 'Cold' : 'Mild';
-        },
-        packLevelColor() {
-          return this.packLevel === 'Hot' ? 'text-red-600' :
-                 this.packLevel === 'Cold' ? 'text-blue-600' : 'text-green-600';
-        },
-        tempRange() {
-          const temps = this.days.map(d => d.main.temp);
-          const min = Math.min(...temps).toFixed(1);
-          const max = Math.max(...temps).toFixed(1);
-          return `${min} - ${max}`;
-        },
-        airWarning() {
-          const a = this.result.air;
-          const comps = a.components;
-          if (comps.pm2_5 > 10)
-            return `PM2.5 elevated (${comps.pm2_5.toFixed(1)} µg/m³) – sensitive groups should reduce outdoor activity.`;
-          if (comps.no2 > 40)
-            return `NO₂ elevated (${comps.no2.toFixed(1)} µg/m³) – may irritate airways.`;
-          if (comps.o3 > 60)
-            return `Ozone elevated (${comps.o3.toFixed(1)} µg/m³) – limit prolonged outdoor exertion.`;
-          return '';
-        }
-      },
-      methods: {
-        async loadWeather() {
-          this.loading = true;
-          this.error = null;
-          this.itinerary = [];
-          try {
-            const r = await fetch(`http://localhost:4000/api/weather?city=${this.city}`);
-            const data = await r.json();
-            if (data.error) {
-              this.error = data.error;
-            } else {
-              this.result = data;
-            }
-          } catch (e) {
-            this.error = e.message;
-          } finally {
-            this.loading = false;
-          }
-        },
-        async generateItinerary() {
-          this.generatingItinerary = true;
-          this.error = null;
-          try {
-            const response = await fetch('http://localhost:4000/api/generate-itinerary', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                weatherData: this.result.list,
-                coordinates: this.result.coordinates
-              })
-            });
-            const data = await response.json();
-            if (data.error) {
-              this.error = data.error;
-            } else {
-              this.itinerary = data.itinerary;
-            }
-          } catch (e) {
-            this.error = 'Failed to generate itinerary: ' + e.message;
-          } finally {
-            this.generatingItinerary = false;
-          }
-        },
-        formatDate(timestamp) {
-          return new Date(timestamp * 1000).toLocaleDateString('en-US', {
-            weekday: 'short',
-            month: 'short',
-            day: 'numeric'
-          });
-        }
-      },
-      mounted() { this.loadWeather(); }
-    }).mount('#app');
-  </script>
-</body>
-</html>
+    <!-- Result -->
+    <div v-if="result">
+      <!-- Summary -->
+      <div style="display:grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap:12px;">
+        <div style="background:#f7fbff; border-left:4px solid #2a7bd3; padding:12px; border

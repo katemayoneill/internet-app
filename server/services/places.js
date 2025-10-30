@@ -32,7 +32,7 @@ export async function getSuggestedPlace(weather, { lat, lon }) {
         return {
             name: place.name,
             address: place.vicinity || "Unknown",
-            type: place.types.[0] || query,
+            type: place.types[0] || query,
             rating: place.rating || "N/A",
             openNow: place.opening_hours?.open_now ?? null
         };
