@@ -57,6 +57,53 @@ createApp({
       if (c?.o3 > 60) details += `O₃: ${c.o3.toFixed(1)} µg/m³. `;
 
       return details;
+    },
+    dailySummary() {
+      if (!this.days.length) return [];
+
+      // Group entries by day
+      const grouped = {};
+      this.days.forEach(entry => {
+        const date = new Date(entry.dt * 1000);
+        const dateKey = date.toISOString().split('T')[0];
+
+        if (!grouped[dateKey]) {
+          grouped[dateKey] = [];
+        }
+        grouped[dateKey].push(entry);
+      });
+
+      // Get first 3 days
+      const dayKeys = Object.keys(grouped).slice(0, 3);
+
+      return dayKeys.map(dateKey => {
+        const entries = grouped[dateKey];
+        const date = new Date(dateKey);
+
+        // Calculate averages and totals
+        const temps = entries.map(e => e.main.temp);
+        const winds = entries.map(e => e.wind.speed);
+        const rains = entries.map(e => e.rain?.['3h'] || 0);
+
+        const avgTemp = (temps.reduce((a, b) => a + b, 0) / temps.length).toFixed(1);
+        const minTemp = Math.min(...temps).toFixed(1);
+        const maxTemp = Math.max(...temps).toFixed(1);
+        const avgWind = ((winds.reduce((a, b) => a + b, 0) / winds.length) * 3.6).toFixed(1);
+        const totalRain = rains.reduce((a, b) => a + b, 0).toFixed(1);
+        const condition = entries[0].weather[0].description;
+
+        return {
+          date: dateKey,
+          dayName: date.toLocaleDateString('en-IE', { weekday: 'long' }),
+          dateFormatted: date.toLocaleDateString('en-IE', { month: 'short', day: 'numeric' }),
+          avgTemp,
+          minTemp,
+          maxTemp,
+          avgWind,
+          totalRain,
+          condition
+        };
+      });
     }
   },
   methods: {
@@ -82,8 +129,8 @@ createApp({
     async generateItinerary() {
       if (!this.result) return;
 
-      console.log('🌍 Generating itinerary for:', this.city);
-      console.log('📍 Using coordinates:', this.result.coordinates);
+      console.log('Generating itinerary for:', this.city);
+      console.log('Using coordinates:', this.result.coordinates);
 
       this.generatingItinerary = true;
       this.itineraryTried = true;
@@ -97,7 +144,7 @@ createApp({
           city: this.city
         };
 
-        console.log('📤 Sending payload:', payload);
+        console.log('Sending payload:', payload);
 
         const res = await fetch('http://localhost:4000/api/generate-itinerary', {
           method: 'POST',
@@ -109,11 +156,11 @@ createApp({
         const data = await res.json();
         if (data.error) throw new Error(data.error);
 
-        console.log('✅ Itinerary received:', data.itinerary);
+        console.log('Itinerary received:', data.itinerary);
         this.itinerary = data.itinerary || [];
       } catch (e) {
         this.error = 'Failed to generate itinerary: ' + (e.message || '');
-        console.error('❌ Itinerary error:', e);
+        console.error('Itinerary error:', e);
       } finally {
         this.generatingItinerary = false;
       }

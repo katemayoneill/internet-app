@@ -40,7 +40,7 @@
 
       <!-- Error Message -->
       <aside v-if="error" class="error-box" role="alert">
-        <span class="error-icon" aria-hidden="true">❌</span>
+        <span class="error-icon" aria-hidden="true">Error:</span>
         <span>{{ error }}</span>
       </aside>
 
@@ -52,8 +52,8 @@
           <div class="summary-grid">
             <article class="card card-rain">
               <h3>Rain Check</h3>
-              <p v-if="bringUmbrella"><span aria-hidden="true">☔</span> Bring an umbrella!</p>
-              <p v-else><span aria-hidden="true">✓</span> No rain expected</p>
+              <p v-if="bringUmbrella">Bring an umbrella!</p>
+              <p v-else>No rain expected</p>
             </article>
 
             <article class="card card-temp">
@@ -67,42 +67,43 @@
             <article class="card card-air">
               <h3>Air Quality</h3>
               <p v-if="airWarning" class="air-warning">
-                <span aria-hidden="true">⚠️</span>
+                <span aria-hidden="true">Warning: </span>
                 <span class="warning-text">{{ airWarning }}</span>
               </p>
-              <p v-else><span aria-hidden="true">✓</span> Good</p>
+              <p v-else>Good</p>
             </article>
           </div>
         </section>
 
-        <!-- Forecast Table -->
+        <!-- 3-Day Forecast Table -->
         <section class="forecast-section">
-          <h2>3-Day Forecast</h2>
+          <h2>3-Day Forecast Summary</h2>
           <div class="table-wrapper">
             <table>
               <thead>
                 <tr>
                   <th scope="col">Day</th>
-                  <th scope="col">Temp (°C)</th>
-                  <th scope="col">Wind (km/h)</th>
-                  <th scope="col">Rain (mm)</th>
-                  <th scope="col">Conditions</th>
+                  <th scope="col">Temperature (°C)</th>
+                  <th scope="col">Wind Speed (km/h)</th>
+                  <th scope="col">Rainfall (mm)</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="d in days" :key="d.dt">
-                  <td data-label="Day">{{ formatDate(d.dt) }}</td>
-                  <td data-label="Temp">{{ d.main.temp.toFixed(1) }}</td>
-                  <td data-label="Wind">{{ (d.wind.speed * 3.6).toFixed(1) }}</td>
-                  <td data-label="Rain">{{ (d.rain?.['3h'] || 0) }}</td>
-                  <td data-label="Conditions" class="capitalize">{{ d.weather[0].description }}</td>
+                <tr v-for="day in dailySummary" :key="day.date">
+                  <td data-label="Day">
+                    <strong>{{ day.dayName }}</strong><br>
+                    <span class="date-small">{{ day.dateFormatted }}</span>
+                  </td>
+                  <td data-label="Temperature">{{ day.avgTemp }}</td>
+                  <td data-label="Wind Speed">{{ day.avgWind }}</td>
+                  <td data-label="Rainfall">{{ day.totalRain }}</td>
                 </tr>
               </tbody>
             </table>
           </div>
         </section>
 
-        <!-- Itinerary Section -->
+        <!-- Itinerary -->
         <section class="itinerary-section">
           <h2>Suggested Itinerary</h2>
           <p class="section-description">Weather-tailored venue recommendations for your trip</p>
@@ -117,7 +118,7 @@
           </button>
 
           <p v-if="itinerary.length === 0 && itineraryTried" class="empty-state">
-            No itinerary yet. Click the button above.
+            No itinerary yet. Click the button above...
           </p>
 
           <div v-if="itinerary.length > 0" class="itinerary-list">
@@ -139,11 +140,11 @@
                   </div>
                   <div class="weather-item">
                     <dt class="visually-hidden">Wind</dt>
-                    <dd><span aria-hidden="true">💨</span> {{ day.weather.wind }} km/h</dd>
+                    <dd>Wind: {{ day.weather.wind }} km/h</dd>
                   </div>
                   <div v-if="day.weather.rain > 0" class="weather-item">
                     <dt class="visually-hidden">Rain</dt>
-                    <dd><span aria-hidden="true">🌧️</span> {{ day.weather.rain }} mm</dd>
+                    <dd>Rain: {{ day.weather.rain }} mm</dd>
                   </div>
                 </dl>
               </header>
@@ -154,7 +155,7 @@
                   <dt>Type:</dt>
                   <dd class="capitalize">{{ day.venue.type }}</dd>
                   <dt v-if="day.venue.rating !== 'N/A'">Rating:</dt>
-                  <dd v-if="day.venue.rating !== 'N/A'"><span aria-hidden="true">⭐</span> {{ day.venue.rating }}</dd>
+                  <dd v-if="day.venue.rating !== 'N/A'">{{ day.venue.rating }}/5</dd>
                   <dt v-if="day.venue.openNow !== null">Status:</dt>
                   <dd v-if="day.venue.openNow !== null">{{ day.venue.openNow ? 'Open now' : 'Closed' }}</dd>
                 </dl>
@@ -167,7 +168,7 @@
 
     <!-- Footer -->
     <footer>
-      <p>Built with Vue.js • Data from OpenWeatherMap & Google Places</p>
+      <p>Built with Vue.js. Data from OpenWeatherMap & Google Places.</p>
     </footer>
   </div>
 

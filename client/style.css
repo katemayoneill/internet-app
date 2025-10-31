@@ -36,7 +36,6 @@ body {
   background: var(--bg);
   padding: calc(var(--space) * 2);
   min-height: 90vh;
-  font-size: 1.5rem;
 }
 
 /* Typography */
@@ -99,7 +98,6 @@ button:hover:not(:disabled) {
 }
 button:disabled {
   opacity: 0.5;
-
 }
 
 /* Cards */
@@ -149,7 +147,9 @@ tbody tr:hover {
 }
 
 /* Itinerary */
-.itinerary-section { margin-top: calc(var(--space) * 2); }
+.itinerary-section {
+  margin-top: calc(var(--space) * 2);
+}
 
 .section-description {
   text-align: center;
