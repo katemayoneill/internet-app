@@ -7,6 +7,7 @@ const router = express.Router();
 router.get("/", async (req, res) => {
     try {
         const { city } = req.query;
+        console.log("weather route hit for: ", city);
         if (!city) {
             return res.status(400).json({ error: "city parameter is required" });
         }
