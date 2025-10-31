@@ -58,6 +58,15 @@ export async function getWeatherData(city) {
       console.error("Request setup error:", error.message);
     }
 
-    throw new Error("Failed to fetch weather data. Check server logs for details.");
+    const apiMessage =
+      (typeof error.response?.data === "object" && error.response?.data?.message) ||
+      (typeof error.response?.data === "string" && error.response.data) ||
+      error.message;
+
+    const wrappedError = new Error(apiMessage || "Failed to fetch weather data.");
+    wrappedError.status = error.response?.status || 500;
+    wrappedError.apiData = error.response?.data;
+
+    throw wrappedError;
   }
 }
