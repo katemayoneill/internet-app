@@ -9,7 +9,7 @@ router.post("/", async (req, res) => {
   console.log("🗺️ Itinerary generation requested");
 
   try {
-    const { weatherData, coordinates } = req.body;
+    const { weatherData, coordinates, city } = req.body;
 
     if (!weatherData || !coordinates) {
       console.error("❌ Missing required data:", {
@@ -19,6 +19,7 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "Missing weather data or coordinates" });
     }
 
+    console.log("📍 City:", city || "Unknown");
     console.log("📍 Coordinates:", coordinates);
     console.log("📊 Weather data points:", weatherData.length);
 
@@ -42,10 +43,12 @@ router.post("/", async (req, res) => {
       const avgRain = entries.reduce((s, e) => s + (e.rain?.["3h"] || 0), 0) / entries.length;
       const conditions = entries[0].weather[0].description;
 
-      console.log(`Day ${i + 1}: ${conditions}, ${avgTemp.toFixed(1)}°C`);
+      console.log(`Day ${i + 1}: ${conditions}, ${avgTemp.toFixed(1)}°C at ${coordinates.lat}, ${coordinates.lon}`);
 
       // Get a suitable place suggestion from Google
       const venue = await getSuggestedPlace(conditions, coordinates);
+
+      console.log(`✅ Venue found: ${venue.name} at ${venue.address}`);
 
       itinerary.push({
         day: i + 1,
@@ -60,7 +63,7 @@ router.post("/", async (req, res) => {
       });
     }
 
-    console.log("✅ Itinerary generated successfully");
+    console.log("✅ Itinerary generated successfully with", itinerary.length, "days");
     res.json({ itinerary });
   } catch (error) {
     console.error("❌ Itinerary generation failed:", error.message);

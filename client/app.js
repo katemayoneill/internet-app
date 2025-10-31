@@ -34,12 +34,29 @@ createApp({
     },
     airWarning() {
       const a = this.result?.air;
-      if (!a?.components) return '';
+      if (!a?.main?.aqi || a.main.aqi === 1) return '';
+
+      const aqi = a.main.aqi;
+      const aqiLevels = {
+        2: { level: 'Fair', risk: 'Acceptable for most, but sensitive individuals may experience minor breathing discomfort' },
+        3: { level: 'Moderate', risk: 'Sensitive groups may experience breathing discomfort; general public unaffected' },
+        4: { level: 'Poor', risk: 'Everyone may experience breathing discomfort; sensitive groups should limit outdoor activity' },
+        5: { level: 'Very Poor', risk: 'Health alert: everyone may experience serious health effects; avoid outdoor activity' }
+      };
+
+      const info = aqiLevels[aqi];
+      if (!info) return '';
+
       const c = a.components;
-      if (c.pm2_5 > 10) return `PM2.5 elevated (${c.pm2_5.toFixed(1)} µg/m³) – sensitive groups reduce outdoor activity.`;
-      if (c.no2 > 40) return `NO₂ elevated (${c.no2.toFixed(1)} µg/m³) – may irritate airways.`;
-      if (c.o3 > 60) return `Ozone elevated (${c.o3.toFixed(1)} µg/m³) – limit prolonged outdoor exertion.`;
-      return '';
+
+      let details = `Air Quality: ${info.level} (AQI ${aqi}/5). ${info.risk}. `;
+
+      // Add specific pollutant details
+      if (c?.pm2_5 > 10) details += `PM2.5: ${c.pm2_5.toFixed(1)} µg/m³. `;
+      if (c?.no2 > 40) details += `NO₂: ${c.no2.toFixed(1)} µg/m³. `;
+      if (c?.o3 > 60) details += `O₃: ${c.o3.toFixed(1)} µg/m³. `;
+
+      return details;
     }
   },
   methods: {
@@ -64,25 +81,39 @@ createApp({
     },
     async generateItinerary() {
       if (!this.result) return;
+
+      console.log('🌍 Generating itinerary for:', this.city);
+      console.log('📍 Using coordinates:', this.result.coordinates);
+
       this.generatingItinerary = true;
       this.itineraryTried = true;
       this.error = null;
       this.itinerary = [];
+
       try {
+        const payload = {
+          weatherData: this.result.list,
+          coordinates: this.result.coordinates,
+          city: this.city
+        };
+
+        console.log('📤 Sending payload:', payload);
+
         const res = await fetch('http://localhost:4000/api/generate-itinerary', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            weatherData: this.result.list,
-            coordinates: this.result.coordinates
-          })
+          body: JSON.stringify(payload)
         });
+
         if (!res.ok) throw new Error(`Server returned ${res.status}`);
         const data = await res.json();
         if (data.error) throw new Error(data.error);
+
+        console.log('✅ Itinerary received:', data.itinerary);
         this.itinerary = data.itinerary || [];
       } catch (e) {
         this.error = 'Failed to generate itinerary: ' + (e.message || '');
+        console.error('❌ Itinerary error:', e);
       } finally {
         this.generatingItinerary = false;
       }
