@@ -1,0 +1,35 @@
+@startuml
+!theme plain
+left to right direction
+skinparam backgroundColor white
+
+actor User
+
+rectangle Browser {
+  component [Vue.js\nClient] as Vue
+}
+
+rectangle Server {
+  component [Express.js\nAPI Server] as API
+}
+
+cloud "External APIs" {
+  component [OpenWeatherMap] as OWM
+  component [Google Places] as GP
+}
+
+User --> Vue : 1. Enter city
+Vue --> API : 2. GET /api/weather
+API --> OWM : 3. Fetch forecast\n+ air quality
+OWM --> API : 4. Return data\n+ coordinates
+API --> Vue : 5. Aggregated\nresponse
+Vue --> User : 6. Display results
+
+User --> Vue : 7. Generate itinerary
+Vue --> API : 8. POST /api/generate-itinerary
+API --> GP : 9. Query venues\nfor 3 days
+GP --> API : 10. Return venues
+API --> Vue : 11. Itinerary
+Vue --> User : 12. Display venues
+
+@enduml

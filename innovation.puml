@@ -1,0 +1,13 @@
+@startuml
+skinparam backgroundColor white
+skinparam shadowing false
+
+salt
+{#
+**Weather Condition** | **Venue Type** | **Rationale**
+Rain / Storm | Museum | Indoor activity protects from precipitation
+Clear / Sunny | Park | Outdoor activity maximizes pleasant weather
+Cloudy | Restaurant | All-weather option with flexible timing
+Default (other) | Tourist Attraction | General interest point suitable for any condition
+}
+@enduml

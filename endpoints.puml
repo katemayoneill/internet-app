@@ -1,0 +1,26 @@
+@startwbs
+!theme plain
+
+* API Endpoints
+** GET /api/weather
+*** Request
+**** Query: city (string)
+*** Response
+**** Weather forecast (40 entries)
+**** Coordinates (lat, lon)
+**** Air quality data
+*** External APIs
+**** OpenWeatherMap Forecast
+**** OpenWeatherMap Air Pollution
+** POST /api/generate-itinerary
+*** Request
+**** Body: weatherData (array)
+**** Body: coordinates (object)
+**** Body: city (string)
+*** Response
+**** Itinerary array (3 days)
+**** Each: weather + venue
+*** External APIs
+**** Google Places Nearby Search
+
+@endwbs
