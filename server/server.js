@@ -1,8 +1,3 @@
-import { createRequire } from "module";
-const require = createRequire(import.meta.url);
-const expressPath = require.resolve("express");
-console.log("Express from:", expressPath);
-
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -19,14 +14,14 @@ const PORT = process.env.PORT || 4000;
 app.use(cors());
 app.use(express.json());
 
-// Mount routers BEFORE listEndpoints and app.listen
+// mount routers before listing endpoints
 app.use("/api/weather", weatherRouter);
-app.use("/api/generate-itinerary", itineraryRouter); // Fixed: Changed from /api/itinerary
+app.use("/api/generate-itinerary", itineraryRouter);
 
-console.log("Registered endpoints:", JSON.stringify(listEndpoints(app), null, 2));
+console.log("registered endpoints:", JSON.stringify(listEndpoints(app), null, 2));
 
 app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
-  console.log(`📍 Weather endpoint: http://localhost:${PORT}/api/weather`);
-  console.log(`📍 Itinerary endpoint: http://localhost:${PORT}/api/generate-itinerary`);
+  console.log(`server running on http://localhost:${PORT}`);
+  console.log(`weather endpoint: http://localhost:${PORT}/api/weather`);
+  console.log(`itinerary endpoint: http://localhost:${PORT}/api/generate-itinerary`);
 });
