@@ -28,4 +28,78 @@
     <div v-if="result">
       <!-- Summary -->
       <div style="display:grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap:12px;">
-        <div style="background:#f7fbff; border-left:4px solid #2a7bd3; padding:12px; border
+        <div style="background:#f7fbff; border-left:4px solid #2a7bd3; padding:12px; border-radius:8px;">
+          <strong>Rain Check</strong>
+          <p v-if="bringUmbrella">☔ Bring an umbrella!</p>
+          <p v-else>No rain expected</p>
+        </div>
+
+        <div style="background:#fff8f2; border-left:4px solid #ff9c3a; padding:12px; border-radius:8px;">
+          <strong>Pack For</strong>
+          <p style="margin:6px 0; font-size:1.1rem;"><span>{{ packLevel }}</span> ({{ tempRange }} °C)</p>
+        </div>
+
+        <div style="background:#f6fff6; border-left:4px solid #3dbb5d; padding:12px; border-radius:8px;">
+          <strong>Air Quality</strong>
+          <p v-if="airWarning">⚠️ {{ airWarning }}</p>
+          <p v-else>Good ✓</p>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <h2 style="margin-top:18px;">📅 3-Day Forecast</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Day</th>
+            <th>Temp (°C)</th>
+            <th>Wind (km/h)</th>
+            <th>Rain (mm)</th>
+            <th>Conditions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="d in days" :key="d.dt">
+            <td>{{ formatDate(d.dt) }}</td>
+            <td>{{ d.main.temp.toFixed(1) }}</td>
+            <td>{{ (d.wind.speed * 3.6).toFixed(1) }}</td>
+            <td>{{ (d.rain?.['3h'] || 0) }}</td>
+            <td class="capitalize">{{ d.weather[0].description }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Itinerary -->
+      <div style="margin-top:18px; padding-top:12px; border-top:1px solid #eee;">
+        <h2>✨ Smart Itinerary (1 place per day)</h2>
+        <button @click="generateItinerary" :disabled="generatingItinerary || !result" style="margin-bottom:12px;">
+          {{ generatingItinerary ? 'Generating…' : 'Generate My Itinerary' }}
+        </button>
+
+        <div v-if="itinerary.length === 0 && itineraryTried" style="color:#666;">No itinerary yet. Click the button above.</div>
+
+        <div v-for="day in itinerary" :key="day.day" style="background:#fafafa; border:1px solid #eee; border-radius:10px; padding:12px; margin-bottom:10px;">
+          <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+            <div>
+              <strong>Day {{ day.day }} – {{ day.date }}</strong>
+              <div style="color:#555;">{{ day.weather.temp }}°C • {{ day.weather.condition }} • 💨 {{ day.weather.wind }} km/h <span v-if="day.weather.rain > 0">• 🌧️ {{ day.weather.rain }} mm</span></div>
+            </div>
+          </div>
+          <div style="margin-top:8px; background:#fff; border:1px solid #eee; border-radius:8px; padding:10px;">
+            <p style="margin:0 0 4px 0;"><strong>📍 {{ day.venue.name }}</strong></p>
+            <p style="margin:0 0 4px 0; color:#666;">{{ day.venue.address }}</p>
+            <p style="margin:0; color:#666;">Type: <span class="capitalize">{{ day.venue.type }}</span> •
+              <span v-if="day.venue.rating !== 'N/A'">⭐ {{ day.venue.rating }}</span>
+              <span v-if="day.venue.openNow !== null"> • {{ day.venue.openNow ? 'Open now' : 'Closed' }}</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Vue App -->
+  <script src="app.js"></script>
+</body>
+</html>
