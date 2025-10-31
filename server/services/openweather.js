@@ -1,72 +1,37 @@
-// server/services/openweather.js
 import axios from "axios";
 import dotenv from "dotenv";
 
-dotenv.config();
+// Load environment variables (from project root)
+dotenv.config({ path: "./.env" });
 
-const API_KEY = process.env.OPENWEATHER_KEY;
+export async function getWeather(city) {
+  const key = process.env.OPENWEATHER_KEY;
 
-export async function getWeatherData(city) {
+  if (!key) {
+    console.error("❌ OPENWEATHER_KEY missing in .env!");
+    throw new Error("Missing API key");
+  }
+
+  const url = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(
+    city
+  )}&appid=${key}&units=metric`;
+
+  console.log("➡️ Fetching weather data from:", url);
+
   try {
-    if (!API_KEY) {
-      console.error("❌ No OpenWeather API key found in environment variables.");
-      throw new Error("Server configuration error: missing API key.");
-    }
-
-    // Fetch 5-day forecast (3-hour intervals)
-    const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(
-      city
-    )}&units=metric&appid=${API_KEY}`;
-
-    console.log("🌍 Fetching forecast for:", forecastUrl);
-    const forecastResponse = await axios.get(forecastUrl);
-    const forecast = forecastResponse.data;
-
-    if (!forecast.city || !forecast.list) {
-      console.error("⚠️ Unexpected forecast data format:", forecast);
-      throw new Error("Invalid forecast data received from OpenWeather API.");
-    }
-
-    // Extract coordinates for pollution API
-    const { lat, lon } = forecast.city.coord;
-    const pollutionUrl = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`;
-    console.log("🌫️ Fetching air pollution data:", pollutionUrl);
-
-    const pollutionResponse = await axios.get(pollutionUrl);
-    const air = pollutionResponse.data.list?.[0];
-
-    if (!air) {
-      console.warn("⚠️ No air pollution data received from API.");
-    }
-
-    // Return cleaned and structured data
-    return {
-      city: forecast.city.name,
-      coordinates: { lat, lon },
-      list: forecast.list.slice(0, 24), // next 3 days (~8 intervals/day)
-      air,
-    };
-  } catch (error) {
-    console.error("🔥 OpenWeather API error:");
-
-    if (error.response) {
-      console.error("Status:", error.response.status);
-      console.error("Data:", error.response.data);
-    } else if (error.request) {
-      console.error("No response received from API:", error.message);
+    const res = await axios.get(url);
+    console.log("✅ OpenWeather API responded:", res.status, res.statusText);
+    return res.data;
+  } catch (err) {
+    if (err.response) {
+      console.error(
+        "🌧️ OpenWeather error:",
+        err.response.status,
+        err.response.data
+      );
     } else {
-      console.error("Request setup error:", error.message);
+      console.error("⚙️ Network or Axios error:", err.message);
     }
-
-    const apiMessage =
-      (typeof error.response?.data === "object" && error.response?.data?.message) ||
-      (typeof error.response?.data === "string" && error.response.data) ||
-      error.message;
-
-    const wrappedError = new Error(apiMessage || "Failed to fetch weather data.");
-    wrappedError.status = error.response?.status || 500;
-    wrappedError.apiData = error.response?.data;
-
-    throw wrappedError;
+    throw err;
   }
 }

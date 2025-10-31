@@ -1,23 +1,30 @@
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const expressPath = require.resolve("express");
+console.log("Express from:", expressPath);
+
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import listEndpoints from "express-list-endpoints";
+
+dotenv.config({ path: "../.env" });
+
 import weatherRouter from "./routes/weather.js";
 import itineraryRouter from "./routes/itinerary.js";
 
-dotenv.config();
 const app = express();
+const PORT = process.env.PORT || 4000;
+
 app.use(cors());
 app.use(express.json());
 
-// mount route modules
+// Mount routers BEFORE listEndpoints and app.listen
 app.use("/api/weather", weatherRouter);
-app.use("/api/generate-itinerary", itineraryRouter);
+app.use("/api/itinerary", itineraryRouter);
 
-// check if working
+console.log("Registered endpoints:", JSON.stringify(listEndpoints(app), null, 2));
 
-app.get("", (req, res) => res.send("weather packer api running :P"));
-
-const PORT = process.env.PORT || 4000;
-
-app.listen(PORT, () => console.log(`server running at http://localhost:${PORT}`));
-
+app.listen(PORT, () => {
+  console.log(`✅ Server running on http://localhost:${PORT}`);
+});

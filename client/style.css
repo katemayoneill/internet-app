@@ -1,3 +1,4 @@
+/* === Global Styles === */
 body {
   font-family: system-ui, sans-serif;
   background: #f8f8f8;
@@ -36,6 +37,7 @@ button:hover {
   background-color: #005fa3;
 }
 
+/* === Table === */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -43,12 +45,4 @@ table {
 }
 
 th, td {
-  border-bottom: 1px solid #ddd;
-  padding: 8px;
-  text-align: left;
-}
-
-th {
-  background: #f0f0f0;
-}
-
+  border-bottom:

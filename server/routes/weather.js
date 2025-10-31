@@ -1,32 +1,34 @@
+// server/routes/weather.js
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const expressPath = require.resolve("express");
+console.log("Express from:", expressPath);
+
 import express from "express";
-import { getWeatherData } from "../services/openweather.js";
+import { getWeather } from "../services/openweather.js";
 
 const router = express.Router();
 
-// GET  /api/weather?city=Dublin
+console.log(">>> weather.js loaded"); // confirm file loaded
+
 router.get("/", async (req, res) => {
-    try {
-        const { city } = req.query;
-        console.log("weather route hit for: ", city);
-        if (!city) {
-            return res.status(400).json({ error: "city parameter is required" });
-        }
+  const city = req.query.city;
+  console.log("🌍 Weather route called for:", city);
 
-        const data = await getWeatherData(city);
-        res.json(data);
-    } catch (error) {
-        const status = error.status || 500;
-        const response = {
-            error: error.message || "failed to fetch weather data :("
-        };
-
-        if (error.apiData) {
-            response.apiData = error.apiData;
-        }
-
-        console.error("error fetching weather data", error.message);
-        res.status(status).json(response);
-    }
+  try {
+    const data = await getWeather(city);
+    console.log("✅ Weather data fetched successfully for:", city);
+    res.json(data);
+  } catch (err) {
+    console.error("❌ Weather fetch failed:", err.message);
+    res.status(500).json({ error: "failed to fetch weather data :(" });
+  }
 });
+
+console.log("Route stack length:", router.stack?.length);
+router.stack?.forEach((r, i) => {
+  console.log(`  [${i}]`, r.route?.path, r.route?.methods);
+});
+
 
 export default router;
