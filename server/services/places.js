@@ -1,6 +1,9 @@
 import axios from "axios";
+import dotenv from "dotenv";
 
-const GOOGLE_API_KEY = process.env.GOOGLE_PLACE_API_KEY;
+dotenv.config();
+
+const API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 
 export async function getSuggestedPlace(weather, { lat, lon }) {
     let query = "tourist attraction";
@@ -13,7 +16,7 @@ export async function getSuggestedPlace(weather, { lat, lon }) {
         query = "restaurant|coffee shop";
     }
 
-    const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lon}&radius=5000&keyword=${encodeURIComponent(query)}&key=${GOOGLE_API_KEY}`;
+    const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lon}&radius=5000&keyword=${encodeURIComponent(query)}&key=${API_KEY}`;
 
     try {
         const res = await axios.get(url);

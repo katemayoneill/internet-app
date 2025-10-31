@@ -23,6 +23,7 @@ dist/
 *.swp
 *.swo
 *~
+*.pdf
 
 # OS
 *.pid
@@ -32,4 +33,4 @@ dist/
 # optional: ignore generated PDF and video (you re-create them every build)
 report.pdf
 demo.mp4
-lecture_notes/
+
