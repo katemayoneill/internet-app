@@ -1,48 +1,252 @@
-/* === Global Styles === */
-body {
-  font-family: system-ui, sans-serif;
-  background: #f8f8f8;
+/* Variables */
+:root {
+  --font: "Courier new";
+  --space: 1rem;
+  --max-width: 42rem;
+  --border: 1px groove #ddd;
+  --primary: #0066cc;
+  --text: #222;
+  --secondary-text: #666;
+  --bg: #fff;
+  --surface: #fafafa;
+  --button-color: #B0C4DE;
+  --radius: 25px;
+}
+
+/* Reset */
+* {
+  box-sizing: border-box;
+  font-size: medium;
+  font-family: var(--font);
   margin: 0;
-  padding: 20px;
+  padding: 0;
+
 }
 
+body {
+  color: var(--text);
+  background: var(--surface);
+  padding: var(--space);
+}
+
+/* Layout */
 #app {
-  max-width: 700px;
-  margin: auto;
-  background: white;
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  max-width: var(--max-width);
+  margin: 0 auto;
+  background: var(--bg);
+  padding: calc(var(--space) * 2);
+  min-height: 90vh;
+  font-size: 1.5rem;
 }
 
+/* Typography */
 h1 {
-  text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: calc(var(--space) * 0.5);
+
+}
+h2 {
+  margin: calc(var(--space) * 2) 0 var(--space);
+
+}
+h3 {
+  margin-bottom: calc(var(--space) * 0.5);
+
 }
 
-input, button {
-  padding: 6px 10px;
-  font-size: 1rem;
+header {
+  text-align: center;
+  padding-bottom: calc(var(--space) * 2);
+  border-bottom: var(--border);
+  margin-bottom: calc(var(--space) * 2);
+}
+
+.subtitle {
+  color: var(--secondary-text);
+}
+
+/* Forms */
+.search-form {
+  display: flex;
+  gap: calc(var(--space) * 0.5);
+  margin-bottom: calc(var(--space) * 2);
+}
+
+input {
+  flex: 1;
+  padding: var(--space);
+  border: var(--border);
+  font-size: large;
+
+}
+
+input:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 button {
-  background-color: #0078d7;
+  padding: var(--space);
+  background: var(--button-color);
   color: white;
   border: none;
-  border-radius: 4px;
   cursor: pointer;
+  border-radius: var(--radius);
 }
 
-button:hover {
-  background-color: #005fa3;
+button:hover:not(:disabled) {
+  background: var(--primary);
+
+}
+button:disabled {
+  opacity: 0.5;
+
 }
 
-/* === Table === */
+/* Cards */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space);
+  margin-bottom: calc(var(--space) * 2);
+}
+
+.card {
+  padding: var(--space);
+  border: var(--border);
+  background: var(--bg);
+}
+
+.card:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+
+}
+
+.card h3 {
+  text-transform: uppercase;
+  color: var(--secondary-text);
+}
+
+/* Table */
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 15px;
+  margin-bottom: calc(var(--space) * 2);
 }
 
 th, td {
-  border-bottom:
+  text-align: left;
+  padding: calc(var(--space) * 0.75);
+  border-bottom: var(--border);
+}
+
+th {
+  background: var(--surface);
+}
+
+tbody tr:hover {
+  background: var(--surface);
+
+}
+
+/* Itinerary */
+.itinerary-section { margin-top: calc(var(--space) * 2); }
+
+.section-description {
+  text-align: center;
+  color: var(--secondary-text);
+  margin-bottom: var(--space);
+}
+
+.itinerary-button {
+  display: block;
+  margin: var(--space) auto;
+}
+
+.itinerary-card {
+  border: var(--border);
+  margin-bottom: var(--space);
+  overflow: hidden;
+}
+
+.itinerary-header {
+  padding: var(--space);
+  background: var(--surface);
+  border-bottom: var(--border);
+}
+
+.itinerary-venue {
+  padding: var(--space);
+}
+
+.itinerary-venue h4 {
+  margin-bottom: calc(var(--space) * 0.5);
+
+}
+address {
+  color: var(--secondary-text);
+
+}
+
+/* Weather details - Inline list */
+.weather-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space);
+  color: var(--secondary-text);
+  margin-top: calc(var(--space) * 0.5);
+}
+
+.venue-details {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: calc(var(--space) * 0.25) var(--space);
+  margin-top: calc(var(--space) * 0.5);
+}
+
+.venue-details dt {
+    color: var(--secondary-text);
+
+}
+
+/* Utility classes */
+.capitalize {
+  text-transform: capitalize;
+
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+}
+
+.error-box {
+  padding: var(--space);
+  background: #fee;
+  border-left: 4px solid #c00;
+  color: #c00;
+  margin-bottom: var(--space);
+}
+
+.empty-state {
+  text-align: center;
+  padding: calc(var(--space) * 2);
+}
+
+/* Footer */
+footer {
+  margin-top: calc(var(--space) * 3);
+  padding-top: var(--space);
+  border-top: var(--border);
+  text-align: center;
+  color: var(--text);
+}
+
+/* Mobile adjustments */
+@media (max-width: 600px) {
+  body { padding: calc(var(--space) * 0.5); }
+  #app { padding: var(--space); }
+  .search-form { flex-direction: column; }
+  .summary-grid { grid-template-columns: 1fr; }
+}

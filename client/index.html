@@ -2,128 +2,173 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Weather Packer – Smart Travel Planner</title>
+  <title>Weather Packer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Plan your trip with weather-based packing recommendations and suggested itineraries" />
   <!-- Vue 3 (CDN) -->
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <!-- Styles -->
-<!--   <link rel="stylesheet" href="style.css" /> -->
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="app">
-    <h1>Weather Packer</h1>
+    <!-- Header -->
+    <header>
+      <h1>Weather Packer</h1>
+      <p class="subtitle">Weather based travel planner.</p>
+    </header>
 
-    <!-- Search -->
-    <div class="search-bar">
-      <input
-        v-model="city"
-        @keyup.enter="loadWeather"
-        placeholder="Enter city (e.g., Dublin, Paris, Tokyo)"
-        style="flex:1;"
-      />
-      <button @click="loadWeather" :disabled="loading">
-        {{ loading ? 'Loading…' : 'Get Forecast' }}
-      </button>
-    </div>
+    <!-- Main Content -->
+    <main>
+      <!-- Search Section -->
+      <section class="search-section">
+        <form @submit.prevent="loadWeather" class="search-form">
+          <label for="city-input" class="visually-hidden">City name</label>
+          <input
+            id="city-input"
+            v-model="city"
+            type="text"
+            placeholder="please enter a city..."
+            required
+            :disabled="loading"
+          />
+          <button type="submit" :disabled="loading">
+            {{ loading ? 'Loading…' : 'Get Forecast' }}
+          </button>
+        </form>
+      </section>
 
-    <!-- Errors -->
-    <div v-if="error" class="error-box">
-      ❌ {{ error }}
-    </div>
+      <!-- Error Message -->
+      <aside v-if="error" class="error-box" role="alert">
+        <span class="error-icon" aria-hidden="true">❌</span>
+        <span>{{ error }}</span>
+      </aside>
 
-    <!-- Result -->
-    <div v-if="result">
-      <!-- Summary -->
-      <div class="summary-grid">
-        <div class="card card-blue">
-          <strong>Rain Check</strong>
-          <p v-if="bringUmbrella">☔ Bring an umbrella!</p>
-          <p v-else>No rain expected</p>
-        </div>
+      <!-- Results -->
+      <div v-if="result" class="results">
+        <!-- Summary Cards -->
+        <section class="summary-section">
+          <h2 class="visually-hidden">Travel Summary</h2>
+          <div class="summary-grid">
+            <article class="card card-rain">
+              <h3>Rain Check</h3>
+              <p v-if="bringUmbrella"><span aria-hidden="true">☔</span> Bring an umbrella!</p>
+              <p v-else><span aria-hidden="true">✓</span> No rain expected</p>
+            </article>
 
-        <div class="card card-orange">
-          <strong>Pack For</strong>
-          <p class="pack-level">
-            <span>{{ packLevel }}</span> ({{ tempRange }} °C)
+            <article class="card card-temp">
+              <h3>Pack For</h3>
+              <p class="pack-level">
+                <strong>{{ packLevel }}</strong>
+                <span class="temp-range">{{ tempRange }} °C</span>
+              </p>
+            </article>
+
+            <article class="card card-air">
+              <h3>Air Quality</h3>
+              <p v-if="airWarning" class="air-warning">
+                <span aria-hidden="true">⚠️</span>
+                <span class="warning-text">{{ airWarning }}</span>
+              </p>
+              <p v-else><span aria-hidden="true">✓</span> Good</p>
+            </article>
+          </div>
+        </section>
+
+        <!-- Forecast Table -->
+        <section class="forecast-section">
+          <h2>3-Day Forecast</h2>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Day</th>
+                  <th scope="col">Temp (°C)</th>
+                  <th scope="col">Wind (km/h)</th>
+                  <th scope="col">Rain (mm)</th>
+                  <th scope="col">Conditions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="d in days" :key="d.dt">
+                  <td data-label="Day">{{ formatDate(d.dt) }}</td>
+                  <td data-label="Temp">{{ d.main.temp.toFixed(1) }}</td>
+                  <td data-label="Wind">{{ (d.wind.speed * 3.6).toFixed(1) }}</td>
+                  <td data-label="Rain">{{ (d.rain?.['3h'] || 0) }}</td>
+                  <td data-label="Conditions" class="capitalize">{{ d.weather[0].description }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Itinerary Section -->
+        <section class="itinerary-section">
+          <h2>Suggested Itinerary</h2>
+          <p class="section-description">Weather-tailored venue recommendations for your trip</p>
+
+          <button
+            @click="generateItinerary"
+            :disabled="generatingItinerary || !result"
+            class="itinerary-button"
+            type="button"
+          >
+            {{ generatingItinerary ? 'Generating…' : 'Generate My Itinerary' }}
+          </button>
+
+          <p v-if="itinerary.length === 0 && itineraryTried" class="empty-state">
+            No itinerary yet. Click the button above.
           </p>
-        </div>
 
-        <div class="card card-green">
-          <strong>Air Quality</strong>
-          <p v-if="airWarning">⚠️ {{ airWarning }}</p>
-          <p v-else>Good ✓</p>
-        </div>
-      </div>
-
-      <!-- Table -->
-      <h2 class="forecast-title">3-Day Forecast</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Day</th>
-            <th>Temp (°C)</th>
-            <th>Wind (km/h)</th>
-            <th>Rain (mm)</th>
-            <th>Conditions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="d in days" :key="d.dt">
-            <td>{{ formatDate(d.dt) }}</td>
-            <td>{{ d.main.temp.toFixed(1) }}</td>
-            <td>{{ (d.wind.speed * 3.6).toFixed(1) }}</td>
-            <td>{{ (d.rain?.['3h'] || 0) }}</td>
-            <td class="capitalize">{{ d.weather[0].description }}</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <!-- Itinerary -->
-      <div class="itinerary-section">
-        <h2>Itinerary</h2>
-        <button
-          @click="generateItinerary"
-          :disabled="generatingItinerary || !result"
-          class="itinerary-button"
-        >
-          {{ generatingItinerary ? 'Generating…' : 'Generate My Itinerary' }}
-        </button>
-
-        <div v-if="itinerary.length === 0 && itineraryTried" style="color:#666;">
-          No itinerary yet. Click the button above.
-        </div>
-
-        <div
-          v-for="day in itinerary"
-          :key="day.day"
-          class="itinerary-card"
-        >
-          <div class="itinerary-header">
-            <div>
-              <strong>Day {{ day.day }} – {{ day.date }}</strong>
-              <div style="color:#555;">
-                {{ day.weather.temp }}°C • {{ day.weather.condition }} • 💨
-                {{ day.weather.wind }} km/h
-                <span v-if="day.weather.rain > 0">
-                  • 🌧️ {{ day.weather.rain }} mm
-                </span>
+          <div v-if="itinerary.length > 0" class="itinerary-list">
+            <article
+              v-for="day in itinerary"
+              :key="day.day"
+              class="itinerary-card"
+            >
+              <header class="itinerary-header">
+                <h3>Day {{ day.day }} – {{ day.date }}</h3>
+                <dl class="weather-details">
+                  <div class="weather-item">
+                    <dt class="visually-hidden">Temperature</dt>
+                    <dd>{{ day.weather.temp }}°C</dd>
+                  </div>
+                  <div class="weather-item">
+                    <dt class="visually-hidden">Condition</dt>
+                    <dd>{{ day.weather.condition }}</dd>
+                  </div>
+                  <div class="weather-item">
+                    <dt class="visually-hidden">Wind</dt>
+                    <dd><span aria-hidden="true">💨</span> {{ day.weather.wind }} km/h</dd>
+                  </div>
+                  <div v-if="day.weather.rain > 0" class="weather-item">
+                    <dt class="visually-hidden">Rain</dt>
+                    <dd><span aria-hidden="true">🌧️</span> {{ day.weather.rain }} mm</dd>
+                  </div>
+                </dl>
+              </header>
+              <div class="itinerary-venue">
+                <h4>{{ day.venue.name }}</h4>
+                <address>{{ day.venue.address }}</address>
+                <dl class="venue-details">
+                  <dt>Type:</dt>
+                  <dd class="capitalize">{{ day.venue.type }}</dd>
+                  <dt v-if="day.venue.rating !== 'N/A'">Rating:</dt>
+                  <dd v-if="day.venue.rating !== 'N/A'"><span aria-hidden="true">⭐</span> {{ day.venue.rating }}</dd>
+                  <dt v-if="day.venue.openNow !== null">Status:</dt>
+                  <dd v-if="day.venue.openNow !== null">{{ day.venue.openNow ? 'Open now' : 'Closed' }}</dd>
+                </dl>
               </div>
-            </div>
+            </article>
           </div>
-          <div class="itinerary-venue">
-            <p><strong>{{ day.venue.name }}</strong></p>
-            <p>{{ day.venue.address }}</p>
-            <p>
-              Type: <span class="capitalize">{{ day.venue.type }}</span> •
-              <span v-if="day.venue.rating !== 'N/A'">⭐ {{ day.venue.rating }}</span>
-              <span v-if="day.venue.openNow !== null">
-                • {{ day.venue.openNow ? 'Open now' : 'Closed' }}
-              </span>
-            </p>
-          </div>
-        </div>
+        </section>
       </div>
-    </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+      <p>Built with Vue.js • Data from OpenWeatherMap & Google Places</p>
+    </footer>
   </div>
 
   <!-- Vue App -->
