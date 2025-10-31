@@ -21,7 +21,35 @@ export async function getWeather(city) {
   try {
     const res = await axios.get(url);
     console.log("✅ OpenWeather API responded:", res.status, res.statusText);
-    return res.data;
+
+    const weatherData = res.data;
+
+    // Extract coordinates from the response
+    const coordinates = {
+      lat: weatherData.city.coord.lat,
+      lon: weatherData.city.coord.lon
+    };
+
+    console.log("📍 Coordinates extracted:", coordinates);
+
+    // Fetch air quality data
+    let airQuality = null;
+    try {
+      const airUrl = `http://api.openweathermap.org/data/2.5/air_pollution?lat=${coordinates.lat}&lon=${coordinates.lon}&appid=${key}`;
+      const airRes = await axios.get(airUrl);
+      airQuality = airRes.data.list[0];
+      console.log("✅ Air quality data fetched");
+    } catch (airErr) {
+      console.error("⚠️ Air quality fetch failed:", airErr.message);
+      // Continue without air quality data
+    }
+
+    // Return combined data
+    return {
+      ...weatherData,
+      coordinates,
+      air: airQuality
+    };
   } catch (err) {
     if (err.response) {
       console.error(
